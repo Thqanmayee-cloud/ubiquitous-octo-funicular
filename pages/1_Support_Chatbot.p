@@ -2,48 +2,73 @@ import streamlit as st
 
 st.set_page_config(page_title="Support Chatbot", page_icon="💬", layout="wide")
 
+# -----------------------------
+# CHAT HISTORY
+# -----------------------------
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
+# -----------------------------
+# PRODUCTS ACCESS
+# -----------------------------
 products = st.session_state.get("products", [])
 product_names = [p["name"].lower() for p in products]
 
-def bot(msg):
+# -----------------------------
+# BOT LOGIC
+# -----------------------------
+def bot_reply(msg):
     msg = msg.lower()
 
+    # product detection
     for name in product_names:
         if name in msg:
-            return "Yes, that product is available on MiniStore homepage."
+            return "Yes 👍 that product is available on MiniStore homepage."
 
-    if "delivery" in msg:
+    if "delivery" in msg or "shipping" in msg:
         return "Delivery takes 3–5 business days."
+
     if "refund" in msg:
-        return "Refunds are processed in 5–7 days."
+        return "Refunds are processed within 5–7 working days."
+
     if "return" in msg:
-        return "Returns allowed within 7 days."
-    if "payment" in msg:
-        return "We accept UPI, cards, COD."
-    if "order" in msg:
-        return "Please share order ID."
+        return "You can return items within 7 days in original condition."
 
-    return "Ask about products, delivery, refunds, returns, payments."
+    if "payment" in msg or "pay" in msg:
+        return "We accept UPI, credit/debit cards, and COD."
 
-st.title("💬 Support Chatbot")
+    if "order" in msg or "status" in msg:
+        return "Please share your order ID to check status."
 
+    return "Ask me about products, delivery, refunds, returns, payments, or orders."
+
+# -----------------------------
+# TITLE
+# -----------------------------
+st.title("💬 MiniStore Support Chatbot")
+
+st.write("Ask anything about MiniStore products or services.")
+
+# -----------------------------
+# CHAT DISPLAY
+# -----------------------------
 for chat in st.session_state.chat_history:
     with st.chat_message("user"):
         st.write(chat["user"])
     with st.chat_message("assistant"):
         st.write(chat["bot"])
 
-user = st.chat_input("Ask something...")
+# -----------------------------
+# INPUT
+# -----------------------------
+user_input = st.chat_input("Type your question...")
 
-if user:
-    reply = bot(user)
+if user_input:
+    response = bot_reply(user_input)
 
     st.session_state.chat_history.append({
-        "user": user,
-        "bot": reply
+        "user": user_input,
+        "bot": response
     })
 
     st.rerun()
