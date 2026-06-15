@@ -1,89 +1,57 @@
 import streamlit as st
 
-# -----------------------------
-# PAGE CONFIG
-# -----------------------------
-st.set_page_config(
-    page_title="Support Chatbot",
-    page_icon="💬",
-    layout="wide"
-)
+st.set_page_config(page_title="MiniStore", page_icon="🛍️", layout="wide")
 
 # -----------------------------
-# CHAT HISTORY
+# PRODUCTS (shared with chatbot)
 # -----------------------------
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+products = [
+    {"name": "Wireless Headphones", "price": 79.99, "desc": "Noise cancelling audio", "cat": "Electronics"},
+    {"name": "Smart Watch", "price": 129.99, "desc": "Track fitness easily", "cat": "Electronics"},
+    {"name": "Cotton T-Shirt", "price": 19.99, "desc": "Soft comfortable wear", "cat": "Fashion"},
+    {"name": "Leather Backpack", "price": 89.99, "desc": "Stylish travel bag", "cat": "Fashion"},
+    {"name": "Coffee Maker", "price": 59.99, "desc": "Fresh coffee at home", "cat": "Home"},
+    {"name": "LED Desk Lamp", "price": 34.99, "desc": "Bright adjustable light", "cat": "Home"},
+]
 
-# -----------------------------
-# PRODUCTS (same shared data)
-# -----------------------------
-products = st.session_state.get("products", [])
+st.session_state["products"] = products
 
-product_names = [p["name"].lower() for p in products]
-
-# -----------------------------
-# RULE-BASED CHATBOT LOGIC
-# -----------------------------
-def bot_response(user_input: str):
-    msg = user_input.lower()
-
-    # PRODUCT QUESTIONS
-    if any(name in msg for name in product_names):
-        return "Yes, that product is available on MiniStore. You can check it on the homepage and add it to cart."
-
-    # DELIVERY
-    if "delivery" in msg or "shipping" in msg:
-        return "Delivery usually takes 3–5 business days depending on your location."
-
-    # REFUND
-    if "refund" in msg:
-        return "Refunds are processed within 5–7 working days after approval."
-
-    # RETURNS
-    if "return" in msg:
-        return "You can return products within 7 days if they are unused and in original packaging."
-
-    # PAYMENT
-    if "payment" in msg or "pay" in msg:
-        return "We accept UPI, credit/debit cards, and cash on delivery (COD)."
-
-    # ORDER STATUS
-    if "order" in msg or "status" in msg:
-        return "Please provide your order ID. I will check the status for you."
-
-    # DEFAULT
-    return "I'm here to help! Ask me about products, delivery, refunds, returns, or payments."
+if "cart" not in st.session_state:
+    st.session_state.cart = []
 
 # -----------------------------
-# TITLE
+# UI
 # -----------------------------
-st.title("💬 MiniStore Support Chatbot")
+st.markdown("<h1 style='text-align:center;'>🛍️ MiniStore</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;'>Simple Demo E-Commerce App</p>", unsafe_allow_html=True)
+st.markdown("---")
 
-st.write("Ask anything about products, orders, delivery, refunds, and more.")
+st.subheader("⭐ Featured Products")
+
+cols = st.columns(3)
+
+for i, p in enumerate(products):
+    with cols[i % 3]:
+        st.markdown(f"### {p['name']}")
+        st.write(p["desc"])
+        st.write("Category:", p["cat"])
+        st.write(f"💰 ${p['price']}")
+
+        if st.button("Add to Cart", key=f"cart_{i}"):
+            st.session_state.cart.append(p)
+            st.success("Added!")
+            st.rerun()
 
 # -----------------------------
-# DISPLAY CHAT HISTORY
+# SIDEBAR
 # -----------------------------
-for chat in st.session_state.chat_history:
-    with st.chat_message("user"):
-        st.write(chat["user"])
-    with st.chat_message("assistant"):
-        st.write(chat["bot"])
+st.sidebar.title("🛒 Cart")
+st.sidebar.write("Items:", len(st.session_state.cart))
+st.sidebar.write("Total:", round(sum(i["price"] for i in st.session_state.cart), 2))
 
-# -----------------------------
-# CHAT INPUT
-# -----------------------------
-user_input = st.chat_input("Type your question...")
-
-if user_input:
-    response = bot_response(user_input)
-
-    # store chat
-    st.session_state.chat_history.append({
-        "user": user_input,
-        "bot": response
-    })
-
-    # rerun to show updated chat
+if st.sidebar.button("Clear Cart"):
+    st.session_state.cart = []
     st.rerun()
+
+st.sidebar.markdown("---")
+st.sidebar.info("Go to Support Chatbot from sidebar 👈")p
