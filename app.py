@@ -4,124 +4,86 @@ import streamlit as st
 # PAGE CONFIG
 # -----------------------------
 st.set_page_config(
-    page_title="MiniStore",
-    page_icon="🛍️",
+    page_title="Support Chatbot",
+    page_icon="💬",
     layout="wide"
 )
 
 # -----------------------------
-# CUSTOM CSS (safe styling)
+# CHAT HISTORY
 # -----------------------------
-st.markdown("""
-<style>
-.hero {
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
-    padding: 35px;
-    border-radius: 15px;
-    color: white;
-    text-align: center;
-}
-
-.product {
-    border: 1px solid #e5e7eb;
-    padding: 15px;
-    border-radius: 12px;
-    background-color: white;
-    margin-bottom: 10px;
-}
-
-.price {
-    color: green;
-    font-size: 18px;
-    font-weight: bold;
-}
-
-.small {
-    font-size: 13px;
-    color: gray;
-}
-</style>
-""", unsafe_allow_html=True)
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
 # -----------------------------
-# SAMPLE PRODUCTS
+# PRODUCTS (same shared data)
 # -----------------------------
-products = [
-    {"name": "Wireless Headphones", "price": 79.99, "desc": "Noise cancelling audio", "cat": "Electronics"},
-    {"name": "Smart Watch", "price": 129.99, "desc": "Track fitness easily", "cat": "Electronics"},
-    {"name": "Cotton T-Shirt", "price": 19.99, "desc": "Soft comfortable wear", "cat": "Fashion"},
-    {"name": "Leather Backpack", "price": 89.99, "desc": "Stylish travel bag", "cat": "Fashion"},
-    {"name": "Coffee Maker", "price": 59.99, "desc": "Fresh coffee at home", "cat": "Home"},
-    {"name": "LED Desk Lamp", "price": 34.99, "desc": "Bright adjustable light", "cat": "Home"},
-]
+products = st.session_state.get("products", [])
+
+product_names = [p["name"].lower() for p in products]
 
 # -----------------------------
-# SESSION CART
+# RULE-BASED CHATBOT LOGIC
 # -----------------------------
-if "cart" not in st.session_state:
-    st.session_state.cart = []
+def bot_response(user_input: str):
+    msg = user_input.lower()
+
+    # PRODUCT QUESTIONS
+    if any(name in msg for name in product_names):
+        return "Yes, that product is available on MiniStore. You can check it on the homepage and add it to cart."
+
+    # DELIVERY
+    if "delivery" in msg or "shipping" in msg:
+        return "Delivery usually takes 3–5 business days depending on your location."
+
+    # REFUND
+    if "refund" in msg:
+        return "Refunds are processed within 5–7 working days after approval."
+
+    # RETURNS
+    if "return" in msg:
+        return "You can return products within 7 days if they are unused and in original packaging."
+
+    # PAYMENT
+    if "payment" in msg or "pay" in msg:
+        return "We accept UPI, credit/debit cards, and cash on delivery (COD)."
+
+    # ORDER STATUS
+    if "order" in msg or "status" in msg:
+        return "Please provide your order ID. I will check the status for you."
+
+    # DEFAULT
+    return "I'm here to help! Ask me about products, delivery, refunds, returns, or payments."
 
 # -----------------------------
-# SIDEBAR
+# TITLE
 # -----------------------------
-st.sidebar.title("🛒 MiniStore")
+st.title("💬 MiniStore Support Chatbot")
 
-categories = ["All"] + sorted(list(set(p["cat"] for p in products)))
-selected_cat = st.sidebar.selectbox("Choose Category", categories)
+st.write("Ask anything about products, orders, delivery, refunds, and more.")
 
-st.sidebar.markdown("---")
-st.sidebar.subheader("Cart Summary")
+# -----------------------------
+# DISPLAY CHAT HISTORY
+# -----------------------------
+for chat in st.session_state.chat_history:
+    with st.chat_message("user"):
+        st.write(chat["user"])
+    with st.chat_message("assistant"):
+        st.write(chat["bot"])
 
-total_items = len(st.session_state.cart)
-total_price = sum(item["price"] for item in st.session_state.cart)
+# -----------------------------
+# CHAT INPUT
+# -----------------------------
+user_input = st.chat_input("Type your question...")
 
-st.sidebar.write("Items:", total_items)
-st.sidebar.write("Total: $", round(total_price, 2))
+if user_input:
+    response = bot_response(user_input)
 
-if st.sidebar.button("Clear Cart"):
-    st.session_state.cart = []
+    # store chat
+    st.session_state.chat_history.append({
+        "user": user_input,
+        "bot": response
+    })
+
+    # rerun to show updated chat
     st.rerun()
-
-# -----------------------------
-# HERO SECTION
-# -----------------------------
-st.markdown("""
-<div class="hero">
-    <h1>🛍️ MiniStore</h1>
-    <p>Your modern demo e-commerce store built with Streamlit</p>
-</div>
-""", unsafe_allow_html=True)
-
-# -----------------------------
-# FILTER PRODUCTS
-# -----------------------------
-if selected_cat == "All":
-    filtered = products
-else:
-    filtered = [p for p in products if p["cat"] == selected_cat]
-
-# -----------------------------
-# FEATURED PRODUCTS
-# -----------------------------
-st.markdown("## ⭐ Featured Products")
-
-cols = st.columns(3)
-
-for i, product in enumerate(filtered):
-    with cols[i % 3]:
-
-        st.markdown("### " + product["name"])
-        st.markdown(f"<p class='small'>{product['desc']}</p>", unsafe_allow_html=True)
-        st.write("Category:", product["cat"])
-        st.markdown(f"<p class='price'>${product['price']}</p>", unsafe_allow_html=True)
-
-        if st.button("Add to Cart", key=f"cart_{i}_{product['name']}"):
-            st.session_state.cart.append(product)
-            st.success("Added to cart!")
-            st.rerun()
-
-# -----------------------------
-# FOOTER
-# -----------------------------
-st.markdown("---")
-st.markdown("© 2026 MiniStore | Streamlit Demo Project")
