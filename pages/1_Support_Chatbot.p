@@ -1,6 +1,44 @@
 import streamlit as st
+from openai import OpenAI
 
 st.set_page_config(page_title="Support Chatbot", page_icon="💬", layout="wide")
+
+# -----------------------------
+# OPENAI CLIENT
+# -----------------------------
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
+# -----------------------------
+# GET PRODUCTS FROM HOME
+# -----------------------------
+products = st.session_state.get("products", [])
+
+product_text = "\n".join(
+    [f"- {p['name']} (${p['price']}): {p['desc']}" for p in products]
+)
+
+# -----------------------------
+# SYSTEM PROMPT
+# -----------------------------
+SYSTEM_PROMPT = f"""
+You are MiniStore customer support assistant.
+
+You ONLY answer:
+- products
+- delivery
+- refunds
+- returns
+- payments
+- order issues
+
+Rules:
+- Be polite and professional
+- If question is unrelated, say:
+"I can only help with MiniStore support."
+
+Products:
+{product_text}
+"""
 
 # -----------------------------
 # CHAT HISTORY
@@ -8,55 +46,16 @@ st.set_page_config(page_title="Support Chatbot", page_icon="💬", layout="wide"
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# -----------------------------
-# PRODUCTS FROM HOMEPAGE
-# -----------------------------
-products = st.session_state.get("products", [])
-product_names = [p["name"].lower() for p in products]
+st.title("💬 MiniStore Support Chatbot")
+
+st.write("Ask anything about MiniStore products or orders.")
 
 # -----------------------------
-# BOT LOGIC
+# SHOW CHAT
 # -----------------------------
-def bot_reply(msg):
-    msg = msg.lower()
-
-    # product detection
-    for name in product_names:
-        if name in msg:
-            return "Yes 👍 that product is available in MiniStore."
-
-    if "delivery" in msg or "shipping" in msg:
-        return "Delivery takes 3–5 business days."
-
-    if "refund" in msg:
-        return "Refunds are processed within 5–7 days."
-
-    if "return" in msg:
-        return "You can return items within 7 days if unused."
-
-    if "payment" in msg:
-        return "We accept UPI, cards, and COD."
-
-    if "order" in msg or "status" in msg:
-        return "Please share your order ID."
-
-    return "Ask about products, delivery, refunds, returns, payments, or orders."
-
-# -----------------------------
-# TITLE
-# -----------------------------
-st.title("💬 Support Chatbot")
-
-st.write("Ask anything about MiniStore")
-
-# -----------------------------
-# CHAT DISPLAY
-# -----------------------------
-for chat in st.session_state.chat_history:
-    with st.chat_message("user"):
-        st.write(chat["user"])
-    with st.chat_message("assistant"):
-        st.write(chat["bot"])
+for msg in st.session_state.chat_history:
+    with st.chat_message(msg["role"]):
+        st.write(msg["content"])
 
 # -----------------------------
 # INPUT
@@ -64,11 +63,26 @@ for chat in st.session_state.chat_history:
 user_input = st.chat_input("Type your question...")
 
 if user_input:
-    response = bot_reply(user_input)
+    st.chat_message("user").write(user_input)
 
     st.session_state.chat_history.append({
-        "user": user_input,
-        "bot": response
+        "role": "user",
+        "content": user_input
     })
 
-    st.rerun()
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            *st.session_state.chat_history
+        ]
+    )
+
+    reply = response.choices[0].message.content
+
+    st.chat_message("assistant").write(reply)
+
+    st.session_state.chat_history.append({
+        "role": "assistant",
+        "content": reply
+    })
