@@ -14,6 +14,7 @@ products = [
     {"name": "LED Desk Lamp", "price": 34.99, "desc": "Adjustable brightness", "cat": "Home"},
 ]
 
+# Share products with chatbot
 st.session_state["products"] = products
 
 # -----------------------------
@@ -25,14 +26,13 @@ if "cart" not in st.session_state:
 # -----------------------------
 # HEADER
 # -----------------------------
-st.markdown("""
-<h1 style='text-align:center;'>🛍️ MiniStore</h1>
-<p style='text-align:center;'>Simple E-Commerce Demo</p>
-<hr>
-""", unsafe_allow_html=True)
+st.title("🛍️ MiniStore")
+st.write("Simple demo e-commerce website built with Streamlit")
+
+st.markdown("---")
 
 # -----------------------------
-# PRODUCTS DISPLAY
+# PRODUCTS GRID
 # -----------------------------
 st.subheader("⭐ Featured Products")
 
@@ -53,7 +53,8 @@ for i, p in enumerate(products):
 # -----------------------------
 # SIDEBAR CART
 # -----------------------------
-st.sidebar.title("🛒 Cart Summary")
+st.sidebar.title("🛒 Cart")
+
 st.sidebar.write("Items:", len(st.session_state.cart))
 st.sidebar.write("Total:", round(sum(i["price"] for i in st.session_state.cart), 2))
 
@@ -62,4 +63,4 @@ if st.sidebar.button("Clear Cart"):
     st.rerun()
 
 st.sidebar.markdown("---")
-st.sidebar.info("Go to Support Chatbot from sidebar 👈")
+st.sidebar.info("👉 Go to Support Chatbot from sidebar")

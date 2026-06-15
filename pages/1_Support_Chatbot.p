@@ -9,7 +9,7 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
 # -----------------------------
-# PRODUCTS ACCESS
+# PRODUCTS FROM HOMEPAGE
 # -----------------------------
 products = st.session_state.get("products", [])
 product_names = [p["name"].lower() for p in products]
@@ -23,31 +23,31 @@ def bot_reply(msg):
     # product detection
     for name in product_names:
         if name in msg:
-            return "Yes 👍 that product is available on MiniStore homepage."
+            return "Yes 👍 that product is available in MiniStore."
 
     if "delivery" in msg or "shipping" in msg:
         return "Delivery takes 3–5 business days."
 
     if "refund" in msg:
-        return "Refunds are processed within 5–7 working days."
+        return "Refunds are processed within 5–7 days."
 
     if "return" in msg:
-        return "You can return items within 7 days in original condition."
+        return "You can return items within 7 days if unused."
 
-    if "payment" in msg or "pay" in msg:
-        return "We accept UPI, credit/debit cards, and COD."
+    if "payment" in msg:
+        return "We accept UPI, cards, and COD."
 
     if "order" in msg or "status" in msg:
-        return "Please share your order ID to check status."
+        return "Please share your order ID."
 
-    return "Ask me about products, delivery, refunds, returns, payments, or orders."
+    return "Ask about products, delivery, refunds, returns, payments, or orders."
 
 # -----------------------------
 # TITLE
 # -----------------------------
-st.title("💬 MiniStore Support Chatbot")
+st.title("💬 Support Chatbot")
 
-st.write("Ask anything about MiniStore products or services.")
+st.write("Ask anything about MiniStore")
 
 # -----------------------------
 # CHAT DISPLAY
